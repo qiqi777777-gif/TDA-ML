@@ -78,12 +78,10 @@ plot(mean.fd(fdAsymp), main="Mean Asymptomatic Landscape")
 # ==============================================================
 # Functional PCA
 # ==============================================================
-
 n_pc_max <- nrow(DataBoth) - 1   # 16
 pca <- pca.fd(fdBoth, nharm = n_pc_max)
 
-m <- c("A1","A2","A3","A4","A5","A6","A7","A8",
-       "S1","S2","S3","S4","S5","S6","S7","S8","S9")
+m <- c("A1","A2","A3","A4","A5","A6","A7","A8", "S1","S2","S3","S4","S5","S6","S7","S8","S9")
 col.group <- c(rep("black", 8), rep("blue", 9))
 group <- c(rep("Asymptomatic", 8), rep("Symptomatic", 9))
 
@@ -92,24 +90,18 @@ cum_var <- cumsum(varprop)
 
 # Print the variance and cumulative variance for each PC
 for (i in 1:length(varprop)) {
-  cat(sprintf("PC%d explains %.1f%% variance (cumulative %.1f%%)\n", 
-              i, varprop[i], cum_var[i]))
+  cat(sprintf("PC%d explains %.1f%% variance (cumulative %.1f%%)\n", i, varprop[i], cum_var[i]))
 }
 
 threshold <- 0.95   
 n_pc_keep <- which(cum_var >= threshold * 100)[1]  
 
-
 fpc_table <- data.frame(
-  PC = 1:n_pc_keep,
-  Variance = round(varprop[1:n_pc_keep], 1),
-  Cumulative = round(cum_var[1:n_pc_keep], 1)
+  PC = 1:n_pc_keep, Variance = round(varprop[1:n_pc_keep], 1), Cumulative = round(cum_var[1:n_pc_keep], 1)
 )
 
 colnames(fpc_table) <- c("PC", "Variance (%)", "Cumulative (%)")
-
 print(fpc_table)
-
 pca_scores <- pca$scores[, 1:n_pc_keep]   # Preserve dynamically selected PCs
 
 # ML Part
@@ -135,10 +127,8 @@ library(dendextend)
 
 # 0.2 Global Parameters
 PARAM <- list(
-  seed = 123,
-  k_range = 2:6,          # for clustering
-  rf_ntree = 500,
-  knn_k_range = 1:15      # for KNN tuning
+  seed = 123, k_range = 2:6,              # for clustering
+  rf_ntree = 500, knn_k_range = 1:15      # for KNN tuning
 )
 set.seed(PARAM$seed)
 
@@ -191,9 +181,7 @@ scale_train_test <- function(train_x, test_x) {
 }
 
 # --- Clustering evaluation ---
-evaluate_clustering <- function(data, labels, k_range,
-                                method = "kmeans", dist_mat = NULL,
-                                linkage = "ward.D2") {
+evaluate_clustering <- function(data, labels, k_range, method = "kmeans", dist_mat = NULL, linkage = "ward.D2") {
   if (is.null(dist_mat)) dist_mat <- dist(data)
   if (method == "kmeans") {
     sil <- sapply(k_range, function(k) {
@@ -233,20 +221,13 @@ plot_dendro_gg <- function(dist_mat, method_name, title_str, m_labels) {
   p <- ggplot() +
     geom_segment(data = segment(ddata), aes(x = x, y = y, xend = xend, yend = yend),
                  color = "#34495E", linewidth = 0.4) +
-    geom_text(data = leaf_data,
-              aes(x = x, y = -max(ddata$segments$y) * 0.05,
-                  label = label_raw, color = color),
+    geom_text(data = leaf_data, aes(x = x, y = -max(ddata$segments$y) * 0.05,label = label_raw, color = color),
               angle = 90, hjust = 1, vjust = 0.5, size = 2.6, fontface = "bold") +
-    scale_color_identity() +
-    scale_y_continuous(expand = expansion(mult = c(0.38, 0.08))) +
-    labs(title = title_str, y = "Height") +
-    theme_minimal(base_size = 7.5) +
+    scale_color_identity() + scale_y_continuous(expand = expansion(mult = c(0.38, 0.08))) +
+    labs(title = title_str, y = "Height") + theme_minimal(base_size = 7.5) +
     theme(plot.title = element_text(size = 8, face = "bold", hjust = 0.5),
-          axis.title.x = element_blank(),
-          axis.text = element_blank(),
-          axis.ticks = element_blank(),
-          panel.grid = element_blank(),
-          legend.position = "none",
+          axis.title.x = element_blank(), axis.text = element_blank(), axis.ticks = element_blank(),
+          panel.grid = element_blank(), legend.position = "none", 
           plot.margin = ggplot2::margin(2, 2, 8, 2, "mm"))
   return(p)
 }
@@ -269,14 +250,11 @@ plot_svm_boundaries <- function(pca_data, labels) {
   
   for (i in 1:3) {
     m_svm <- tryCatch({
-      svm(Group ~ PC1 + PC2, data = df, 
-          kernel = kernels[i], cost = 1, gamma = 0.1, scale = TRUE)
+      svm(Group ~ PC1 + PC2, data = df, kernel = kernels[i], cost = 1, gamma = 0.1, scale = TRUE)
     }, error = function(e) NULL)
     
     if (is.null(m_svm)) {
-      p <- ggplot() + annotate("text", x = 0, 
-                               y = 0, label = paste(titles[i], "\n(Fit Failed)"), 
-                               size = 3) +
+      p <- ggplot() + annotate("text", x = 0, y = 0, label = paste(titles[i], "\n(Fit Failed)"), size = 3) +
         theme_void() + labs(title = titles[i])
       plot_list[[i]] <- p
       next
@@ -287,15 +265,12 @@ plot_svm_boundaries <- function(pca_data, labels) {
     p <- ggplot() +
       geom_tile(data = grid, aes(x = PC1, y = PC2, fill = Pred), alpha = 0.2) +
       geom_point(data = df, aes(x = PC1, y = PC2, color = Group), size = 2, alpha = 0.9) +
-      scale_fill_manual(values = c("Asymptomatic" = "#2C3E50", 
-                                   "Symptomatic" = "#2980B9")) +
-      scale_color_manual(values = c("Asymptomatic" = "#14252F", 
-                                    "Symptomatic" = "#154360")) +
+      scale_fill_manual(values = c("Asymptomatic" = "#2C3E50", "Symptomatic" = "#2980B9")) +
+      scale_color_manual(values = c("Asymptomatic" = "#14252F", "Symptomatic" = "#154360")) +
       labs(title = sanitize_latex(titles[i]), x = "PC1 Score", y = "PC2 Score") +
       theme_minimal(base_size = 8) +
       theme(
-        plot.title = element_text(size = 8.5, face = "bold", hjust = 0.5),
-        legend.position = "none",
+        plot.title = element_text(size = 8.5, face = "bold", hjust = 0.5), legend.position = "none",
         plot.margin = ggplot2::margin(2, 2, 2, 2, "mm")
       )
     plot_list[[i]] <- p
@@ -309,8 +284,7 @@ plot_svm_boundaries <- function(pca_data, labels) {
 # 0.4 Data Extraction & Preparation
 pca_scores <- pca$scores[, 1:n_pc_keep, drop = FALSE]
 if (!exists("m")) {
-  m <- c("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8",
-         "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9")
+  m <- c("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9")
 }
 rownames(DataBoth) <- m
 rownames(pca_scores) <- m
@@ -328,8 +302,7 @@ dist_pca <- dist(pca_scores)
 # Unified coordinate system for plotting
 if (n_pc_keep > 2) {
   set.seed(123)
-  tsne_proj <- Rtsne(pca_scores, dims = 2,
-                     perplexity = min(5, nrow(pca_scores) - 1),
+  tsne_proj <- Rtsne(pca_scores, dims = 2, perplexity = min(5, nrow(pca_scores) - 1),
                      check_duplicates = FALSE, pca = FALSE)
   proj_coords <- data.frame(X = tsne_proj$Y[, 1], Y = tsne_proj$Y[, 2])
   proj_label <- "t-SNE (FPCA)"
@@ -342,36 +315,29 @@ if (n_pc_keep > 2) {
 # 1. Unsupervised Clustering Analysis
 # ==============================================================
 # Step 1.1: Parameter Diagnostics (WSS and Silhouette)
-wss_vals <- sapply(PARAM$k_range, 
-                   function(k) kmeans(pca_scores, centers = k, nstart = 25)$tot.withinss)
-sil_vals <- sapply(PARAM$k_range, 
-                   function(k) 
-                     mean(silhouette(kmeans(pca_scores, centers = k, 
+wss_vals <- sapply(PARAM$k_range, function(k) kmeans(pca_scores, centers = k, nstart = 25)$tot.withinss)
+sil_vals <- sapply(PARAM$k_range, function(k) mean(silhouette(kmeans(pca_scores, centers = k, 
                                             nstart = 25)$cluster, dist_pca)[, 3]))
 
 df_diag <- data.frame(k = PARAM$k_range, WSS = wss_vals, Silhouette = sil_vals)
 
-p_wss <- ggplot(df_diag, aes(x = k, y = WSS)) +
-  geom_line(color = "#2980B9", linewidth = 0.8) +
+p_wss <- ggplot(df_diag, aes(x = k, y = WSS)) + geom_line(color = "#2980B9", linewidth = 0.8) +
   geom_point(color = "#2C3E50", size = 2) +
   labs(title = " ", x = "Clusters (k)", y = "Within SS") + #"Elbow Method (WSS)"
   theme_minimal(base_size = 8) + theme(plot.title = element_text(face = "bold"))
 
-p_sil <- ggplot(df_diag, aes(x = k, y = Silhouette)) +
-  geom_line(color = "#27AE60", linewidth = 0.8) +
-  geom_point(color = "#1E8449", size = 2) +
-  labs(title = " ", x = "Clusters (k)", y = "Avg Silhouette") + # "Silhouette Analysis"
-  theme_minimal(base_size = 8) + theme(plot.title = element_text(face = "bold"))
+p_sil <- ggplot(df_diag, aes(x = k, y = Silhouette)) + geom_line(color = "#27AE60", linewidth = 0.8) +
+  geom_point(color = "#1E8449", size = 2) + labs(title = " ", x = "Clusters (k)", y = "Avg Silhouette") +
+  theme_minimal(base_size = 8) + theme(plot.title = element_text(face = "bold"))  # "Silhouette Analysis"
 
 diag_grid <- wrap_plots(p_wss, p_sil, ncol = 2) 
 print(diag_grid)
 
 # --- Ground Truth ---
-p_gt_cluster <- ggplot(data.frame(X = proj_coords$X, Y = proj_coords$Y,
+p_gt_cluster <- ggplot(data.frame(X = proj_coords$X, Y = proj_coords$Y, 
                                   Group = factor(ifelse(y_true == 1, "Symptomatic", "Asymptomatic"))),
                        aes(x = X, y = Y, shape = Group)) +
-  geom_point(size = 4, alpha = 0.85, color = "gray40") +
-  scale_shape_manual(values = c(16, 17)) +
+  geom_point(size = 4, alpha = 0.85, color = "gray40") + scale_shape_manual(values = c(16, 17)) +
   labs(title = " ", shape = "True Group") + #"Ground Truth",
   theme_minimal(base_size = 13) + theme(legend.position = "bottom")
 
@@ -386,22 +352,14 @@ all_clusters_km <- unique(c(km_raw$clusters, km_pca$clusters))
 palette_km <- get_palette(length(all_clusters_km))
 names(palette_km) <- sort(all_clusters_km)
 
-km_raw_df <- data.frame(X = proj_coords$X, Y = proj_coords$Y,
-                        Cluster = factor(km_raw$clusters))
+km_raw_df <- data.frame(X = proj_coords$X, Y = proj_coords$Y, Cluster = factor(km_raw$clusters))
 p_km_raw <- ggplot(km_raw_df, aes(x = X, y = Y, color = Cluster)) +
-  geom_point(size = 4, alpha = 0.85) + scale_color_brewer(palette = "Set1") +
-  labs(title = " ", #K-means (Raw Data) 
-       color = "Cluster") +
-  theme_minimal(base_size = 13) + theme(legend.position = "bottom")
-
-km_pca_df <- data.frame(X = proj_coords$X, Y = proj_coords$Y,
-                        Cluster = factor(km_pca$clusters))
-p_km_pca <- ggplot(km_pca_df, aes(x = X, y = Y, color = Cluster)) +
-  geom_point(size = 4, alpha = 0.85) +
-  scale_color_brewer(palette = "Set1") +
-  labs(title = " ", # "K-means (FPCA Scores)"
-       color = "Cluster") +
-  theme_minimal(base_size = 13) + theme(legend.position = "bottom")
+  geom_point(size = 4, alpha = 0.85) + scale_color_brewer(palette = "Set1") + labs(title = " ",
+       color = "Cluster") + theme_minimal(base_size = 13) + theme(legend.position = "bottom")
+km_pca_df <- data.frame(X = proj_coords$X, Y = proj_coords$Y, Cluster = factor(km_pca$clusters))
+p_km_pca <- ggplot(km_pca_df, aes(x = X, y = Y, color = Cluster)) + geom_point(size = 4, alpha = 0.85) +
+  scale_color_brewer(palette = "Set1") + labs(title = " ", # "K-means (FPCA Scores)"
+       color = "Cluster") + theme_minimal(base_size = 13) + theme(legend.position = "bottom")
 
 km_scatter_panel <- (wrap_plots(p_gt_cluster, p_km_raw, p_km_pca, ncol = 3, guides = "collect") &
                        theme(legend.position = "bottom") ) 
@@ -422,10 +380,8 @@ dendro_2x4_grid <- wrap_plots(dend_plots, ncol = 2)
 print(dendro_2x4_grid)
 
 # Step 1.3B: Hierarchical Scatter Comparison
-hc_raw <- evaluate_clustering(DataBoth, y_true, PARAM$k_range, 
-                              "hierarchical", dist_raw, "ward.D2")
-hc_pca <- evaluate_clustering(pca_scores, y_true, PARAM$k_range, 
-                              "hierarchical", dist_pca, "ward.D2")
+hc_raw <- evaluate_clustering(DataBoth, y_true, PARAM$k_range, "hierarchical", dist_raw, "ward.D2")
+hc_pca <- evaluate_clustering(pca_scores, y_true, PARAM$k_range, "hierarchical", dist_pca, "ward.D2")
 
 pca_df$Cluster_HC_Raw <- factor(hc_raw$clusters)
 pca_df$Cluster_HC_PCA <- factor(hc_pca$clusters)
@@ -434,38 +390,29 @@ all_clusters_hc <- unique(c(hc_raw$clusters, hc_pca$clusters))
 palette_hc <- get_palette(length(all_clusters_hc))
 names(palette_hc) <- sort(all_clusters_hc)
 
-hc_raw_df <- data.frame(X = proj_coords$X, Y = proj_coords$Y,
-                        Cluster = factor(hc_raw$clusters))
-p_hc_raw <- ggplot(hc_raw_df, aes(x = X, y = Y, color = Cluster)) +
-  geom_point(size = 4, alpha = 0.85) +
-  scale_color_brewer(palette = "Set1") +
-  labs(title = " ", #Hierarchical (Raw Data)
-       color = "Cluster") +
+hc_raw_df <- data.frame(X = proj_coords$X, Y = proj_coords$Y, Cluster = factor(hc_raw$clusters))
+p_hc_raw <- ggplot(hc_raw_df, aes(x = X, y = Y, color = Cluster)) + geom_point(size = 4, alpha = 0.85) +
+  scale_color_brewer(palette = "Set1") + labs(title = " ", #Hierarchical (Raw Data) 
+                                              color = "Cluster") +
   theme_minimal(base_size = 13) + theme(legend.position = "bottom")
 
-hc_pca_df <- data.frame(X = proj_coords$X, Y = proj_coords$Y,
-                        Cluster = factor(hc_pca$clusters))
-p_hc_pca <- ggplot(hc_pca_df, aes(x = X, y = Y, color = Cluster)) +
-  geom_point(size = 4, alpha = 0.85) +
+hc_pca_df <- data.frame(X = proj_coords$X, Y = proj_coords$Y, Cluster = factor(hc_pca$clusters))
+p_hc_pca <- ggplot(hc_pca_df, aes(x = X, y = Y, color = Cluster)) + geom_point(size = 4, alpha = 0.85) +
   scale_color_brewer(palette = "Set1") +
   labs(title = " ", #Hierarchical (FPCA Scores)
-       color = "Cluster") +
-  theme_minimal(base_size = 13) + theme(legend.position = "bottom")
+       color = "Cluster") + theme_minimal(base_size = 13) + theme(legend.position = "bottom")
 
 hc_scatter_panel <- (wrap_plots(p_gt_cluster, p_hc_raw, p_hc_pca, ncol = 3, guides = "collect") &
-                       theme(legend.position = "bottom") &
-                       plot_annotation(title = "") & 
+                       theme(legend.position = "bottom") & plot_annotation(title = "") & 
                        theme(plot.title = element_text(size = 10, face = "bold")))
 print(hc_scatter_panel)
 
 # Step 1.4: Table 1 - Unsupervised Performance Summary
 cluster_summary <- data.frame(
-  Method = rep(c("K-means", "Hierarchical"), each = 2),
-  Data = rep(c("Raw", "FPCA"), 2),
+  Method = rep(c("K-means", "Hierarchical"), each = 2), Data = rep(c("Raw", "FPCA"), 2),
   "Best k" = c(km_raw$best_k, km_pca$best_k, hc_raw$best_k, hc_pca$best_k),
   "Max Silhouette" = round(c(km_raw$max_sil, km_pca$max_sil, hc_raw$max_sil, hc_pca$max_sil), 3),
-  ARI = round(c(km_raw$ari, km_pca$ari, hc_raw$ari, hc_pca$ari), 3),
-  check.names = FALSE
+  ARI = round(c(km_raw$ari, km_pca$ari, hc_raw$ari, hc_pca$ari), 3), check.names = FALSE
 ) |>
   mutate(across(where(is.character), sanitize_latex))
 
@@ -495,8 +442,7 @@ train_svm <- function(train_x, train_y, test_x, kernel = "radial") {
   gamma_val <- 1 / ncol(tr_x)
   
   res <- tryCatch({
-    model <- svm(tr_x, train_y_fac, kernel = kernel,
-                 cost = 1, gamma = gamma_val, scale = FALSE,
+    model <- svm(tr_x, train_y_fac, kernel = kernel,cost = 1, gamma = gamma_val, scale = FALSE,
                  probability = TRUE)
     pred_obj <- predict(model, te_x, probability = TRUE)
     pred_class <- as.numeric(as.character(pred_obj))
@@ -534,8 +480,7 @@ run_nested_loocv_svm <- function(data, labels, kernels = c("linear", "radial", "
         te_x[is.na(te_x) | is.infinite(te_x)] <- 0
         gamma_val <- 1 / ncol(tr_x)
         
-        model <- svm(tr_x, as.factor(inner_train_y),
-                     kernel = kern, cost = 1, gamma = gamma_val,
+        model <- svm(tr_x, as.factor(inner_train_y), kernel = kern, cost = 1, gamma = gamma_val,
                      scale = FALSE, probability = TRUE)
         pred_obj <- predict(model, te_x, probability = TRUE)
         inner_pred[j] <- as.numeric(as.character(pred_obj))
@@ -551,9 +496,8 @@ run_nested_loocv_svm <- function(data, labels, kernels = c("linear", "radial", "
     final_tr_x[is.na(final_tr_x) | is.infinite(final_tr_x)] <- 0
     final_te_x[is.na(final_te_x) | is.infinite(final_te_x)] <- 0
     gamma_val_final <- 1 / ncol(final_tr_x)
-    final_model <- svm(final_tr_x, as.factor(train_y),
-                       kernel = best_kernel, cost = 1, gamma = gamma_val_final,
-                       scale = FALSE, probability = TRUE)
+    final_model <- svm(final_tr_x, as.factor(train_y),kernel = best_kernel, cost = 1, 
+                       gamma = gamma_val_final, scale = FALSE, probability = TRUE)
     final_pred_obj <- predict(final_model, final_te_x, probability = TRUE)
     pred_class[i] <- as.numeric(as.character(final_pred_obj))
     probs <- attr(final_pred_obj, "probabilities")
@@ -575,9 +519,7 @@ train_rf <- function(train_x, train_y, test_x) {
     return(list(class = maj_class, prob = maj_prob))
   mtry_val <- max(1, floor(ncol(train_x) / 3))
   res <- tryCatch({
-    model <- randomForest(train_x, train_y_fac,
-                          ntree = PARAM$rf_ntree,
-                          mtry = mtry_val)
+    model <- randomForest(train_x, train_y_fac, ntree = PARAM$rf_ntree, mtry = mtry_val)
     pred_class <- as.numeric(as.character(predict(model, test_x)))
     pred_prob <- extract_prob1(predict(model, test_x, type = "prob"))
     list(class = pred_class, prob = pred_prob)
@@ -622,8 +564,7 @@ run_nested_loocv_knn <- function(data, labels, k_range = 1:15) {
         inner_test_x <- train_x[j, , drop = FALSE]
         scaled <- scale_train_test(inner_train_x, inner_test_x)
         set.seed(PARAM$seed)
-        pred <- knn(train = scaled$train, test = scaled$test,
-                    cl = factor(inner_train_y), k = k)
+        pred <- knn(train = scaled$train, test = scaled$test,cl = factor(inner_train_y), k = k)
         inner_pred[j] <- as.numeric(as.character(pred))
       }
       inner_acc <- c(inner_acc, mean(inner_pred == train_y, na.rm = TRUE))
@@ -688,26 +629,20 @@ knn_pca_acc  <- round(calc_metrics(knn_pca$pred_class, y_true)["Accuracy"], 3)
 # ---- KNN K-value Across Folds ----
 k_trend_df <- data.frame(
   Fold = rep(1:length(k_used_raw), 2), K = c(k_used_raw, k_used_pca),
-  Data = rep(c("Raw Landscape", "FPCA Scores"), 
-             each = length(k_used_raw))
+  Data = rep(c("Raw Landscape", "FPCA Scores"), each = length(k_used_raw))
 )
 
 p_knn_trend <- ggplot(k_trend_df, aes(x = Fold, y = K, color = Data, group = Data)) +
-  geom_line(linewidth = 1.2, alpha = 0.8) +
-  geom_point(size = 2.5, alpha = 0.9) +
-  scale_color_manual(values = c("Raw Landscape" = "#2C3E50", 
-                                "FPCA Scores" = "#2980B9")) +
+  geom_line(linewidth = 1.2, alpha = 0.8) + geom_point(size = 2.5, alpha = 0.9) +
+  scale_color_manual(values = c("Raw Landscape" = "#2C3E50", "FPCA Scores" = "#2980B9")) +
   scale_x_continuous(breaks = seq(1, length(k_used_raw), by = 2)) +
   scale_y_continuous(breaks = 1:max(PARAM$knn_k_range)) +
   labs(
     title = " ", # KNN K-Value Selected per LOOCV Fold
-    x = "LOOCV Fold Index", y = "Selected K",
-    color = "Data Type"
+    x = "LOOCV Fold Index", y = "Selected K", color = "Data Type"
   ) +
-  theme_minimal(base_size = 10) +
-  theme(
-    plot.title = element_text(face = "bold", size = 11),
-    legend.position = "bottom",
+  theme_minimal(base_size = 10) + theme(
+    plot.title = element_text(face = "bold", size = 11), legend.position = "bottom",
     legend.title = element_text(size = 9)
   )
 
@@ -717,37 +652,26 @@ print(p_knn_trend)
 kernel_numeric <- c("linear" = 1, "radial" = 2, "polynomial" = 3)
 
 kernel_trend_df <- data.frame(
-  Fold = rep(1:length(kernel_used_raw), 2),
-  Kernel = c(kernel_used_raw, kernel_used_pca),
-  KernelNumeric = c(as.numeric(factor(kernel_used_raw, 
-                                      levels = c("linear", "radial", "polynomial"))),
-                    as.numeric(factor(kernel_used_pca, 
-                                      levels = c("linear", "radial","polynomial")))),
-  Data = rep(c("Raw Landscape", "FPCA Scores"), 
-             each = length(kernel_used_raw))
+  Fold = rep(1:length(kernel_used_raw), 2), Kernel = c(kernel_used_raw, kernel_used_pca),
+  KernelNumeric = c(as.numeric(factor(kernel_used_raw, levels = c("linear", "radial", "polynomial"))),
+                    as.numeric(factor(kernel_used_pca, levels = c("linear", "radial","polynomial")))),
+  Data = rep(c("Raw Landscape", "FPCA Scores"), each = length(kernel_used_raw))
 )
 
-p_svm_trend <- ggplot(kernel_trend_df, aes(x = Fold, y = KernelNumeric, 
-                                           color = Data, group = Data)) +
-  geom_line(linewidth = 1.2, alpha = 0.8) +
-  geom_point(size = 2.5, alpha = 0.9) +
-  scale_color_manual(values = c("Raw Landscape" = "#2C3E50", 
-                                "FPCA Scores" = "#2980B9")) +
+p_svm_trend <- ggplot(kernel_trend_df, aes(x = Fold, y = KernelNumeric, color = Data, group = Data)) +
+  geom_line(linewidth = 1.2, alpha = 0.8) + geom_point(size = 2.5, alpha = 0.9) +
+  scale_color_manual(values = c("Raw Landscape" = "#2C3E50", "FPCA Scores" = "#2980B9")) +
   scale_x_continuous(breaks = seq(1, length(kernel_used_raw), by = 2)) +
   scale_y_continuous(
-    breaks = c(1, 2, 3),
-    labels = c("linear", "radial", "polynomial"),
-    limits = c(0.5, 3.5)
+    breaks = c(1, 2, 3), labels = c("linear", "radial", "polynomial"), limits = c(0.5, 3.5)
   ) +
   labs(
     title = " ", # SVM Kernel Selected per LOOCV Fold
-    x = "LOOCV Fold Index", y = "Selected Kernel",
-    color = "Data Type"
+    x = "LOOCV Fold Index", y = "Selected Kernel", color = "Data Type"
   ) +
   theme_minimal(base_size = 10) +
   theme(
-    plot.title = element_text(face = "bold", size = 11),
-    legend.position = "bottom",
+    plot.title = element_text(face = "bold", size = 11), legend.position = "bottom",
     legend.title = element_text(size = 9)
   )
 
@@ -762,29 +686,24 @@ p_gt_class <- ggplot(data.frame(X = proj_coords$X, Y = proj_coords$Y,
   geom_point(size = 4, alpha = 0.85) +
   scale_color_manual(values = c("Asymptomatic" = "#2C3E50", "Symptomatic" = "#E74C3C")) +
   labs(title = " ", #Ground Truth
-       color = "True Group") +
-  theme_minimal(base_size = 13) + theme(legend.position = "bottom")
+    color = "True Group") + theme_minimal(base_size = 13) + theme(legend.position = "bottom")
 
 # --- SVM Predictions ---
 p_svm_raw <- ggplot(data.frame(X = proj_coords$X, Y = proj_coords$Y,
                                Pred = factor(ifelse(svm_raw$pred_class == 1, "Symptomatic", "Asymptomatic"),
                                              levels = c("Asymptomatic", "Symptomatic"))),
-                    aes(x = X, y = Y, color = Pred)) +
-  geom_point(size = 4, alpha = 0.85) +
+                    aes(x = X, y = Y, color = Pred)) + geom_point(size = 4, alpha = 0.85) +
   scale_color_manual(values = c("Asymptomatic" = "#2C3E50", "Symptomatic" = "#E74C3C")) +
   labs(title = " ", #SVM Predictions (Raw Data)
-       color = "Predicted") +
-  theme_minimal(base_size = 13) + theme(legend.position = "bottom")
+       color = "Predicted") + theme_minimal(base_size = 13) + theme(legend.position = "bottom")
 
 p_svm_pca <- ggplot(data.frame(X = proj_coords$X, Y = proj_coords$Y,
                                Pred = factor(ifelse(svm_pca$pred_class == 1, "Symptomatic", "Asymptomatic"),
                                              levels = c("Asymptomatic", "Symptomatic"))),
-                    aes(x = X, y = Y, color = Pred)) +
-  geom_point(size = 4, alpha = 0.85) +
+                    aes(x = X, y = Y, color = Pred)) + geom_point(size = 4, alpha = 0.85) +
   scale_color_manual(values = c("Asymptomatic" = "#2C3E50", "Symptomatic" = "#E74C3C")) +
   labs(title = " ", #SVM Predictions (FPCA Scores)
-       color = "Predicted") +
-  theme_minimal(base_size = 13) + theme(legend.position = "bottom")
+       color = "Predicted") + theme_minimal(base_size = 13) + theme(legend.position = "bottom")
 
 svm_grid <- (wrap_plots(p_gt_class, p_svm_raw, p_svm_pca, ncol = 3, guides = "collect")&
                theme(legend.position = "bottom") )
@@ -792,64 +711,46 @@ print(svm_grid)
 
 # --- RF Predictions ---
 p_rf_raw <- ggplot(data.frame(X = proj_coords$X, Y = proj_coords$Y,
-                              Pred = factor(ifelse(rf_raw$pred_class == 1,
-                                                   "Symptomatic", "Asymptomatic"),
-                                            levels = c("Asymptomatic",
-                                                       "Symptomatic"))),
-                   aes(x = X, y = Y, color = Pred)) +
-  geom_point(size = 4, alpha = 0.85) +
-  scale_color_manual(values = c("Asymptomatic" = "#2C3E50", 
-                                "Symptomatic" = "#E74C3C")) +
+                              Pred = factor(ifelse(rf_raw$pred_class == 1, "Symptomatic", "Asymptomatic"),
+                                            levels = c("Asymptomatic", "Symptomatic"))),
+                   aes(x = X, y = Y, color = Pred)) + geom_point(size = 4, alpha = 0.85) +
+  scale_color_manual(values = c("Asymptomatic" = "#2C3E50", "Symptomatic" = "#E74C3C")) +
   labs(title = " ", #RF Predictions (Raw Data)
-       color = "Predicted") +
-  theme_minimal(base_size = 13) + theme(legend.position = "bottom")
+       color = "Predicted") + theme_minimal(base_size = 13) + theme(legend.position = "bottom")
 
 p_rf_pca <- ggplot(data.frame(X = proj_coords$X, Y = proj_coords$Y,
-                              Pred = factor(ifelse(rf_pca$pred_class == 1,
-                                                   "Symptomatic", "Asymptomatic"),
+                              Pred = factor(ifelse(rf_pca$pred_class == 1, "Symptomatic", "Asymptomatic"),
                                             levels = c("Asymptomatic","Symptomatic"))),
-                   aes(x = X, y = Y, color = Pred)) +
-  geom_point(size = 4, alpha = 0.85) +
+                   aes(x = X, y = Y, color = Pred)) + geom_point(size = 4, alpha = 0.85) +
   scale_color_manual(values = c("Asymptomatic" = "#2C3E50", "Symptomatic" = "#E74C3C")) +
   labs(title = " ", #RF Predictions (FPCA Scores)
-       #      subtitle = paste("LOOCV Accuracy =", rf_pca_acc, 
-       # " (", proj_label, ")"), 
-       color = "Predicted"
-  ) +
-  theme_minimal(base_size = 13) + theme(legend.position = "bottom")
+       #      subtitle = paste("LOOCV Accuracy =", rf_pca_acc, " (", proj_label, ")"), 
+       color = "Predicted") + theme_minimal(base_size = 13) + theme(legend.position = "bottom")
 
-rf_grid <- (wrap_plots(p_gt_class, p_rf_raw, p_rf_pca, ncol = 3, 
-                       guides = "collect") &
+rf_grid <- (wrap_plots(p_gt_class, p_rf_raw, p_rf_pca, ncol = 3, guides = "collect") &
               theme(legend.position = "bottom") )
 print(rf_grid)
 
 # --- KNN Predictions ---
-p_knn_raw <- ggplot(data.frame(X = proj_coords$X, 
-                               Y = proj_coords$Y,
+p_knn_raw <- ggplot(data.frame(X = proj_coords$X, Y = proj_coords$Y,
                                Pred = factor(ifelse(knn_raw$pred_class == 1, 
                                                     "Symptomatic", "Asymptomatic"), 
                                              levels = c("Asymptomatic", "Symptomatic"))),
-                    aes(x = X, y = Y, color = Pred)) +
-  geom_point(size = 4, alpha = 0.85) +
+                    aes(x = X, y = Y, color = Pred)) + geom_point(size = 4, alpha = 0.85) +
   scale_color_manual(values = c("Asymptomatic" = "#2C3E50", "Symptomatic" = "#E74C3C")) +
   labs(title = " ", #KNN Predictions (Raw Data)
-       color = "Predicted") +
-  theme_minimal(base_size = 13) + theme(legend.position = "bottom")
+       color = "Predicted") + theme_minimal(base_size = 13) + theme(legend.position = "bottom")
 
 p_knn_pca <- ggplot(data.frame(X = proj_coords$X, Y = proj_coords$Y,
                                Pred = factor(ifelse(knn_pca$pred_class == 1,
                                                     "Symptomatic", "Asymptomatic"),
                                              levels = c("Asymptomatic", "Symptomatic"))), 
-                    aes(x = X, y = Y, color = Pred)) +
-  geom_point(size = 4, alpha = 0.85) +
-  scale_color_manual(values = c("Asymptomatic" = "#2C3E50", 
-                                "Symptomatic" = "#E74C3C")) +
+                    aes(x = X, y = Y, color = Pred)) + geom_point(size = 4, alpha = 0.85) +
+  scale_color_manual(values = c("Asymptomatic" = "#2C3E50",  "Symptomatic" = "#E74C3C")) +
   labs(title = " ", #KNN Predictions (FPCA Scores)
-       color = "Predicted") +
-  theme_minimal(base_size = 13) + theme(legend.position = "bottom")
+       color = "Predicted") + theme_minimal(base_size = 13) + theme(legend.position = "bottom")
 
-knn_grid <- (wrap_plots(p_gt_class, p_knn_raw, p_knn_pca, ncol = 3, 
-                        guides = "collect") &
+knn_grid <- (wrap_plots(p_gt_class, p_knn_raw, p_knn_pca, ncol = 3, guides = "collect") &
                theme(legend.position = "bottom") )
 print(knn_grid)
 
@@ -870,14 +771,10 @@ format_results <- function(pred_class, pred_prob, true) {
   }
   if (is.null(roc_obj)) roc_obj <- list(sensitivities = c(0, 1), specificities = c(1, 0))
   metrics_df <- data.frame(
-    Accuracy = round(m_res["Accuracy"], 3),
-    Balanced_Accuracy = round(m_res["Balanced_Accuracy"], 3),
-    Sensitivity = round(m_res["Sensitivity"], 3),
-    Specificity = round(m_res["Specificity"], 3),
-    Precision = round(m_res["Precision"], 3),
-    F1 = round(m_res["F1"], 3),
-    MCC = round(m_res["MCC"], 3),
-    AUC = ifelse(is.na(auc_val), NA, round(auc_val, 3))
+    Accuracy = round(m_res["Accuracy"], 3), Balanced_Accuracy = round(m_res["Balanced_Accuracy"], 3),
+    Sensitivity = round(m_res["Sensitivity"], 3), Specificity = round(m_res["Specificity"], 3),
+    Precision = round(m_res["Precision"], 3), F1 = round(m_res["F1"], 3),
+    MCC = round(m_res["MCC"], 3), AUC = ifelse(is.na(auc_val), NA, round(auc_val, 3))
   )
   return(list(metrics = metrics_df, roc_obj = roc_obj))
 }
@@ -909,10 +806,8 @@ class_results <- bind_rows(
       lapply(c("Raw", "FPCA"), function(dt) {
         m <- results[[method]][[dt]]$metrics
         data.frame(
-          Method = method, Data = dt,
-          Accuracy = m$Accuracy, Balanced_Accuracy = m$Balanced_Accuracy,
-          Sensitivity = m$Sensitivity, Specificity = m$Specificity,
-          Precision = m$Precision, F1 = m$F1,
+          Method = method, Data = dt, Accuracy = m$Accuracy, Balanced_Accuracy = m$Balanced_Accuracy,
+          Sensitivity = m$Sensitivity, Specificity = m$Specificity, Precision = m$Precision, F1 = m$F1,
           MCC = m$MCC, AUC = m$AUC, check.names = FALSE
         )
       })
@@ -944,16 +839,10 @@ class_champ_pred <- results[[first_class_method]][[class_champ_data]]$pred
 
 # Build champion row for later display
 class_champion <- data.frame(
-  Method = class_champ_label,
-  Data = class_champ_data,
-  Accuracy = top_class$Accuracy[1],
-  AUC = top_class$AUC[1],
-  MCC = top_class$MCC[1],
-  Balanced_Accuracy = top_class$Balanced_Accuracy[1],
-  Sensitivity = top_class$Sensitivity[1],
-  Specificity = top_class$Specificity[1],
-  Precision = top_class$Precision[1],
-  F1 = top_class$F1[1]
+  Method = class_champ_label, Data = class_champ_data, Accuracy = top_class$Accuracy[1],
+  AUC = top_class$AUC[1], MCC = top_class$MCC[1], Balanced_Accuracy = top_class$Balanced_Accuracy[1],
+  Sensitivity = top_class$Sensitivity[1], Specificity = top_class$Specificity[1],
+  Precision = top_class$Precision[1], F1 = top_class$F1[1]
 )
 
 # --- Clustering Champion ---
@@ -988,10 +877,8 @@ if (grepl("K-means", first_cluster_method)) {
 }
 
 cluster_champion <- data.frame(
-  Method = cluster_champ_label,
-  Data = cluster_champ_data,
-  ARI = top_cluster$ARI[1],
-  Max_Silhouette = top_cluster$`Max Silhouette`[1]
+  Method = cluster_champ_label, Data = cluster_champ_data,
+  ARI = top_cluster$ARI[1], Max_Silhouette = top_cluster$`Max Silhouette`[1]
 )
 
 # --- Tables of metrics ---
@@ -1003,19 +890,16 @@ class_results_extra <- class_results |>
 
 knitr::kable(class_results_core,
              # caption = "Core Classification Metrics (LOOCV)",
-             format = "latex", booktabs = TRUE,
-             escape = TRUE, digits = 3)
+             format = "latex", booktabs = TRUE, escape = TRUE, digits = 3)
 
 knitr::kable(class_results_extra,
              #   caption = "Additional Classification Metrics (LOOCV)",
-             format = "latex", booktabs = TRUE,
-             escape = TRUE, digits = 3)
+             format = "latex", booktabs = TRUE, escape = TRUE, digits = 3)
 
 # --- Metric bar plot & ROC curves ---
 class_long <- class_results |>
   pivot_longer(
-    cols = c(Accuracy, Balanced_Accuracy, Sensitivity, 
-             Specificity, Precision, F1, MCC, AUC),
+    cols = c(Accuracy, Balanced_Accuracy, Sensitivity, Specificity, Precision, F1, MCC, AUC),
     names_to = "Metric", values_to = "Value"
   )
 
@@ -1026,11 +910,8 @@ roc_data_faceted <- bind_rows(
         roc_obj <- results[[method]][[dt]]$roc_obj
         auc_val <- results[[method]][[dt]]$metrics$AUC
         data.frame(
-          Method = method,
-          Data = dt,
-          TPR = roc_obj$sensitivities,
-          FPR = 1 - roc_obj$specificities,
-          AUC = round(auc_val, 3)
+          Method = method, Data = dt, TPR = roc_obj$sensitivities,
+          FPR = 1 - roc_obj$specificities, AUC = round(auc_val, 3)
         )
       })
     )
@@ -1041,17 +922,13 @@ roc_data_faceted <- bind_rows(
 p_roc_faceted <- ggplot(roc_data_faceted, 
                         aes(x = FPR, y = TPR, color = Data, linetype = Data)) +
   geom_abline(slope = 1, intercept = 0, color = "grey60", linetype = "dashed") +
-  geom_step(linewidth = 1) +   
-  facet_wrap(~ Method, ncol = 3) +
+  geom_step(linewidth = 1) +  facet_wrap(~ Method, ncol = 3) +
   scale_color_manual(values = c(Raw = "#E69F00", FPCA = "#0072B2")) +
   scale_linetype_manual(values = c(Raw = "solid", FPCA = "dashed")) +
   labs(title = " ", # ROC Curves by Algorithm (Faceted, Stepwise)
-       x = "False Positive Rate (1 - Specificity)",
-       y = "True Positive Rate (Sensitivity)") +
-  theme_minimal(base_size = 8.5) +
-  theme(plot.title = element_text(face = "bold", size = 10),
-        legend.position = "bottom",
-        legend.title = element_blank(),
+       x = "False Positive Rate (1 - Specificity)", y = "True Positive Rate (Sensitivity)") +
+  theme_minimal(base_size = 8.5) + theme(plot.title = element_text(face = "bold", size = 10),
+        legend.position = "bottom", legend.title = element_blank(),
         strip.text = element_text(face = "bold", size = 9),
         legend.text = element_text(size = 7))
 
@@ -1062,27 +939,21 @@ print(p_roc_faceted)
 # ==============================================================
 # 3.1 Confusion Matrix for Champion Classifier
 cm <- table(
-  Pred = factor(ifelse(class_champ_pred == 0, "Asymp.", "Symp."), 
-                levels = c("Asymp.", "Symp.")),
-  True = factor(ifelse(y_true == 0, "Asymp.", "Symp."), 
-                levels = c("Asymp.", "Symp."))
+  Pred = factor(ifelse(class_champ_pred == 0, "Asymp.", "Symp."), levels = c("Asymp.", "Symp.")),
+  True = factor(ifelse(y_true == 0, "Asymp.", "Symp."), levels = c("Asymp.", "Symp."))
 )
 cm_df <- as.data.frame(cm)
 
 p_cm_class <- ggplot(cm_df, aes(x = True, y = Pred, fill = Freq)) +
-  geom_tile(color = "white", linewidth = 0.8) +
-  geom_text(aes(label = Freq), size = 8, fontface = "bold") +
+  geom_tile(color = "white", linewidth = 0.8) + geom_text(aes(label = Freq), size = 8, fontface = "bold") +
   scale_fill_gradient(low = "#EAECEE", high = "#2C3E50") +
   labs(#title = paste("Supervised Classification Champion CM (", class_champion$Method, "- ", 
-    #class_champion$Data, ")"),
-    #subtitle = paste("Top Accuracy =", round(class_champion$Accuracy, 3), 
+    #class_champion$Data, ")"), subtitle = paste("Top Accuracy =", round(class_champion$Accuracy, 3), 
     #"| AUC =", round(class_champion$AUC, 3)),
-    x = "True Label", y = "Predicted Label") +
-  theme_minimal(base_size = 8.5) +
+    x = "True Label", y = "Predicted Label") + theme_minimal(base_size = 8.5) +
   theme(plot.title = element_text(face = "bold", size = 9.5),
         plot.subtitle = element_text(size = 8, color = "#B03A2E", face = "bold"),
-        legend.position = "none",
-        plot.margin = ggplot2::margin(2, 2, 2, 2, "mm"))
+        legend.position = "none", plot.margin = ggplot2::margin(2, 2, 2, 2, "mm"))
 
 # 3.2 Confusion Matrix for Champion Clusterer
 cm_cluster <- table(Pred = factor(cluster_labels, levels = 1:max(cluster_labels)), 
@@ -1091,27 +962,21 @@ cm_cluster_df <- as.data.frame(cm_cluster)
 levels(cm_cluster_df$True) <- c("Asymp.", "Symp.")
 
 p_cm_cluster <- ggplot(cm_cluster_df, aes(x = True, y = Pred, fill = Freq)) +
-  geom_tile(color = "white", linewidth = 0.8) +
-  geom_text(aes(label = Freq), size = 8, fontface = "bold") +
+  geom_tile(color = "white", linewidth = 0.8) + geom_text(aes(label = Freq), size = 8, fontface = "bold") +
   scale_fill_gradient(low = "#EAECEE", high = "#2C3E50") +
   labs(#title = paste("Unsupervised Clustering Champion: ", cluster_champion$Method, 
-    # " (", cluster_champion$Data, ")"),
-    # subtitle = paste0("ARI = ", round(cluster_champion$ARI, 3), 
-    #", Max Silhouette = ", 
-    #round(cluster_champion$Max_Silhouette, 3)),
-    x = "True Label", y = "Cluster ID") +
-  theme_minimal(base_size = 8.5) +
+    # " (", cluster_champion$Data, ")"), subtitle = paste0("ARI = ", round(cluster_champion$ARI, 3), 
+    #", Max Silhouette = ", round(cluster_champion$Max_Silhouette, 3)),
+    x = "True Label", y = "Cluster ID") + theme_minimal(base_size = 8.5) +
   theme(plot.title = element_text(face = "bold", size = 9.5),
         plot.subtitle = element_text(size = 8, color = "#B03A2E", face = "bold"),
-        legend.position = "none",
-        plot.margin = ggplot2::margin(2, 2, 2, 2, "mm"))
+        legend.position = "none", plot.margin = ggplot2::margin(2, 2, 2, 2, "mm"))
 
 # 3.3 Champion Summary Table
 champ_data <- data.frame(
   Task = c("Unsupervised Clustering", "Supervised Classification"),
   Best_Model = c(
-    cluster_champion$Method,   
-    class_champion$Method
+    cluster_champion$Method,  class_champion$Method
   ),
   Key_Metric_1 = c(
     paste0("Max Silhouette: ", round(cluster_champion$Max_Silhouette, 3)),
@@ -1125,7 +990,7 @@ champ_data <- data.frame(
   mutate(across(where(is.character), sanitize_latex))
 
 table_plot <- ggplot(champ_data, aes(y = rev(seq_len(nrow(champ_data))))) +
-  annotate("text", x = 0.0, y = nrow(champ_data) + 0.5, 
+  annotate("text", x = 0.0, y = nrow(champ_data) + 0.5,
            label = "Task", hjust = 0, fontface = "bold", size = 3.2) +
   annotate("text", x = 1.3, y = nrow(champ_data) + 0.5, 
            label = "Best Model", hjust = 0, fontface = "bold", size = 3.2) +
@@ -1133,8 +998,7 @@ table_plot <- ggplot(champ_data, aes(y = rev(seq_len(nrow(champ_data))))) +
            label = "Key Metric 1", hjust = 0, fontface = "bold", size = 3.2) +
   annotate("text", x = 4.1, y = nrow(champ_data) + 0.5, 
            label = "Key Metric 2", hjust = 0, fontface = "bold", size = 3.2) +
-  geom_text(aes(x = 0.0, label = Task), hjust = 0, vjust = 0.5, 
-            size = 3.0, fontface = "bold") +
+  geom_text(aes(x = 0.0, label = Task), hjust = 0, vjust = 0.5, size = 3.0, fontface = "bold") +
   geom_text(aes(x = 1.3, label = Best_Model), hjust = 0, vjust = 0.5, size = 3.0) +
   geom_text(aes(x = 2.8, label = Key_Metric_1), hjust = 0, vjust = 0.5, size = 3.0) +
   geom_text(aes(x = 4.1, label = Key_Metric_2), hjust = 0, vjust = 0.5, size = 3.0) +
@@ -1142,8 +1006,7 @@ table_plot <- ggplot(champ_data, aes(y = rev(seq_len(nrow(champ_data))))) +
              linetype = "solid", color = "black", linewidth = 0.5) +
   geom_hline(yintercept = 0.5, linetype = "solid", color = "black", linewidth = 0.5) +
   xlim(-0.1, 5.2) + ylim(0.3, nrow(champ_data) + 0.8) +
-  theme_void() +
-  theme(plot.margin = ggplot2::margin(2, 2, 2, 2, "mm"))
+  theme_void() + theme(plot.margin = ggplot2::margin(2, 2, 2, 2, "mm"))
 
 # 3.4 Raw vs FPCA Performance Comparison
 cluster_best_raw <- cluster_summary |>
@@ -1166,8 +1029,7 @@ class_best_fpca <- class_results |>
 
 comparison_table <- data.frame(
   Metric = c("Clustering ARI", "Clustering Silhouette",
-             "Classification Accuracy", "Classification AUC",
-             "Classification F1"),
+             "Classification Accuracy", "Classification AUC", "Classification F1"),
   Raw = c(cluster_best_raw$ARI, cluster_best_raw$`Max Silhouette`,
           class_best_raw$Accuracy, class_best_raw$AUC, class_best_raw$F1),
   FPCA = c(cluster_best_fpca$ARI, cluster_best_fpca$`Max Silhouette`,
@@ -1180,13 +1042,10 @@ knitr::kable(comparison_table,
 
 # Dashboard assembly
 summary_dashboard <- (wrap_plots(
-  wrap_elements(table_plot), p_cm_class,
-  p_cm_cluster, ncol = 1,
-  heights = c(0.30, 0.35, 0.35)
+  wrap_elements(table_plot), p_cm_class, p_cm_cluster, ncol = 1, heights = c(0.30, 0.35, 0.35)
 ) &
-  # plot_annotation(
-  #  title = "Machine Learning Pipeline: Dual Champion Executive Dashboard",
-  #  subtitle = "Note: Clustering and Classification are evaluated independently (Unsupervised vs Supervised)"
+  # plot_annotation(title = "Machine Learning Pipeline: Dual Champion Executive Dashboard",
+  # subtitle = "Note: Clustering and Classification are evaluated independently (Unsupervised vs Supervised)"
   #) &
   theme(
     plot.title = element_text(face = "bold", size = 11, hjust = 0.5),
@@ -1232,17 +1091,15 @@ knitr::kable(overall_summary,
 class_summary_dynamic <- class_results |>
   group_by(Method) |>
   summarise(
-    Task = "Classification",
-    Best_Feature = case_when(
+    Task = "Classification", Best_Feature = case_when(
       Accuracy[Data == "Raw"] > Accuracy[Data == "FPCA"] ~ "Raw",
       Accuracy[Data == "Raw"] < Accuracy[Data == "FPCA"] ~ "FPCA",
       Accuracy[Data == "Raw"] == Accuracy[Data == "FPCA"] & 
         AUC[Data == "Raw"] > AUC[Data == "FPCA"] ~ "Raw",
       Accuracy[Data == "Raw"] == Accuracy[Data == "FPCA"] & 
-        AUC[Data == "Raw"] < AUC[Data == "FPCA"] ~ "FPCA",
-      TRUE ~ "Tie"
+        AUC[Data == "Raw"] < AUC[Data == "FPCA"] ~ "FPCA", TRUE ~ "Tie"
     ),
-    Raw_Performance = paste0("Acc=", round(Accuracy[Data == "Raw"], 3), 
+    Raw_Performance = paste0("Acc=", round(Accuracy[Data == "Raw"], 3),
                              ", AUC=", round(AUC[Data == "Raw"], 3)),
     FPCA_Performance = paste0("Acc=", round(Accuracy[Data == "FPCA"], 3), 
                               ", AUC=", round(AUC[Data == "FPCA"], 3))
@@ -1270,8 +1127,7 @@ final_table_clean <- bind_rows(class_summary_dynamic, cluster_summary_dynamic) |
 
 knitr::kable(final_table_clean,
              #  caption = "Feature-Model Interaction Summary",
-             booktabs = TRUE,
-             align = c("l", "l", "l", "l", "l"))
+             booktabs = TRUE, align = c("l", "l", "l", "l", "l"))
 
 # ==============================================================
 # S1 Misclassification Diagnostic
@@ -1309,55 +1165,43 @@ dist_table <- data.frame(
 knitr::kable(
   dist_table,
   # caption = "L2 Distance from S1 to Group Means (Raw Landscape Space)",
-  booktabs = TRUE,
-  digits = 4,
-  align = "lc"
+  booktabs = TRUE, digits = 4, align = "lc"
 )
 
 # --- 2. Visualisation: S1 vs. class means ---
 time_points <- 1:ncol(DataBoth)
 plot_df <- data.frame(
-  Time = rep(time_points, 3),
-  Value = c(s1_data, mean_asymptomatic, mean_symptomatic),
+  Time = rep(time_points, 3), Value = c(s1_data, mean_asymptomatic, mean_symptomatic),
   Curve = factor(rep(c("Patient S1", "Mean Asymptomatic", "Mean Symptomatic (excl. S1)"),
                      each = length(time_points)),
                  levels = c("Mean Symptomatic (excl. S1)", "Mean Asymptomatic", "Patient S1"))
 )
 
 p_s1_landscape <- ggplot(plot_df, aes(x = Time, y = Value, color = Curve, linetype = Curve)) +
-  geom_line(size = 1) +
-  scale_color_manual(values = c("Patient S1" = "#E74C3C",
-                                "Mean Asymptomatic" = "#2C3E50",
-                                "Mean Symptomatic (excl. S1)" = "#27AE60")) +
-  scale_linetype_manual(values = c("Patient S1" = "solid",
-                                   "Mean Asymptomatic" = "dashed",
+  geom_line(size = 1) + scale_color_manual(values = c("Patient S1" = "#E74C3C",
+                                "Mean Asymptomatic" = "#2C3E50", "Mean Symptomatic (excl. S1)" = "#27AE60")) +
+  scale_linetype_manual(values = c("Patient S1" = "solid", "Mean Asymptomatic" = "dashed",
                                    "Mean Symptomatic (excl. S1)" = "dotted")) +
   labs(title = " ", #S1 Persistence Landscape vs. Class Means
        x = "Time Point Index", y = "Persistence Value",
        #subtitle = paste0("L2 to Asymptomatic = ", round(dist_to_asymp, 4),
-       # ", L2 to Symptomatic = ", round(dist_to_symp, 4))
-  )+
-  theme_minimal(base_size = 13) +
+       #", L2 to Symptomatic = ", round(dist_to_symp, 4))
+  )+ theme_minimal(base_size = 13) +
   theme(legend.position = "bottom", legend.title = element_blank())
 
 print(p_s1_landscape)
 
 # --- 3. Supervised learning: classifier predictions ---
 models <- list(
-  "SVM_Raw"   = svm_raw$pred_class,
-  "SVM_FPCA"    = svm_pca$pred_class,
-  "RF_Raw"    = rf_raw$pred_class,
-  "RF_FPCA"     = rf_pca$pred_class,
-  "KNN_Raw"   = knn_raw$pred_class,
-  "KNN_FPCA"    = knn_pca$pred_class
+  "SVM_Raw" = svm_raw$pred_class, "SVM_FPCA" = svm_pca$pred_class,
+  "RF_Raw" = rf_raw$pred_class, "RF_FPCA" = rf_pca$pred_class,
+  "KNN_Raw" = knn_raw$pred_class, "KNN_FPCA" = knn_pca$pred_class
 )
 
 # Build summary table
 results_df <- data.frame(
-  Model = names(models),
-  Predicted = sapply(models, function(x) x[s1_idx]),
-  True = y_true[s1_idx],
-  Correct = sapply(models, function(x) {
+  Model = names(models), Predicted = sapply(models, function(x) x[s1_idx]),
+  True = y_true[s1_idx], Correct = sapply(models, function(x) {
     ifelse(x[s1_idx] == y_true[s1_idx], "Yes", "No")
   })
 )
@@ -1365,8 +1209,7 @@ results_df <- data.frame(
 knitr::kable(
   results_df,
   # caption = "S1: Supervised Classification Predictions",
-  booktabs = TRUE,
-  align = "lccc"
+  booktabs = TRUE, align = "lccc"
 )
 
 # --- 4. Unsupervised learning: cluster assignments ---
@@ -1378,15 +1221,13 @@ km_pca_table <- table(Cluster = km_pca$clusters, True_Label = ifelse(y_true == 1
 knitr::kable(
   km_raw_table,
   # caption = "K-means (Raw): Cluster Composition by True Label",
-  booktabs = TRUE,
-  align = "lcc"
+  booktabs = TRUE, align = "lcc"
 )
 
 knitr::kable(
   km_pca_table,
   # caption = "K-means (PC): Cluster Composition by True Label",
-  booktabs = TRUE,
-  align = "lcc"
+  booktabs = TRUE, align = "lcc"
 )
 
 # S1's cluster and its composition
@@ -1397,8 +1238,7 @@ s1_cluster_composition_raw <- table(ifelse(y_true[km_raw$clusters == s1_km_raw] 
 s1_cluster_composition_pca <- table(ifelse(y_true[km_pca$clusters == s1_km_pca] == 1, "Symp", "Asymp"))
 
 km_s1_summary <- data.frame(
-  Representation = c("Raw", "FPCA"),
-  S1_Cluster = c(s1_km_raw, s1_km_pca),
+  Representation = c("Raw", "FPCA"), S1_Cluster = c(s1_km_raw, s1_km_pca),
   Asymp_in_Cluster = c(s1_cluster_composition_raw["Asymp"], s1_cluster_composition_pca["Asymp"]),
   Symp_in_Cluster = c(s1_cluster_composition_raw["Symp"], s1_cluster_composition_pca["Symp"])
 )
@@ -1407,8 +1247,7 @@ km_s1_summary[is.na(km_s1_summary)] <- 0
 knitr::kable(
   km_s1_summary,
   # caption = "K-means: S1 Cluster and Its Composition",
-  booktabs = TRUE,
-  align = "lccc"
+  booktabs = TRUE, align = "lccc"
 )
 
 # --- 4.2 Hierarchical clustering ---
@@ -1418,15 +1257,13 @@ hc_pca_table <- table(Cluster = hc_pca$clusters, True_Label = ifelse(y_true == 1
 knitr::kable(
   hc_raw_table,
   # caption = "Hierarchical (Raw): Cluster Composition by True Label",
-  booktabs = TRUE,
-  align = "lcc"
+  booktabs = TRUE, align = "lcc"
 )
 
 knitr::kable(
   hc_pca_table,
   # caption = "Hierarchical (PC): Cluster Composition by True Label",
-  booktabs = TRUE,
-  align = "lcc"
+  booktabs = TRUE, align = "lcc"
 )
 
 # S1's cluster and its composition
@@ -1437,8 +1274,7 @@ s1_cluster_composition_hc_raw <- table(ifelse(y_true[hc_raw$clusters == s1_hc_ra
 s1_cluster_composition_hc_pca <- table(ifelse(y_true[hc_pca$clusters == s1_hc_pca] == 1, "Symp", "Asymp"))
 
 hc_s1_summary <- data.frame(
-  Representation = c("Raw", "FPCA"),
-  S1_Cluster = c(s1_hc_raw, s1_hc_pca),
+  Representation = c("Raw", "FPCA"), S1_Cluster = c(s1_hc_raw, s1_hc_pca),
   Asymp_in_Cluster = c(s1_cluster_composition_hc_raw["Asymp"], s1_cluster_composition_hc_pca["Asymp"]),
   Symp_in_Cluster = c(s1_cluster_composition_hc_raw["Symp"], s1_cluster_composition_hc_pca["Symp"])
 )
@@ -1447,8 +1283,7 @@ hc_s1_summary[is.na(hc_s1_summary)] <- 0
 knitr::kable(
   hc_s1_summary,
   # caption = "Hierarchical: S1 Cluster and Its Composition",
-  booktabs = TRUE,
-  align = "lccc"
+  booktabs = TRUE, align = "lccc"
 )
 
 # --- 4.3 Combined summary ---
@@ -1462,6 +1297,5 @@ s1_cluster_all <- rbind(
 knitr::kable(
   s1_cluster_all,
   # caption = "S1 Cluster Assignment Summary (All Unsupervised Methods)",
-  booktabs = TRUE,
-  align = "lccc"
+  booktabs = TRUE, align = "lccc"
 )
