@@ -1,0 +1,12 @@
+
+\begin{tabular}{lllll}
+\toprule
+Method & Task & Best\_Feature & Raw\_Performance & FPCA\_Performance\\
+\midrule
+KNN & Classification & FPCA & Acc=0.882, AUC=0.861 & Acc=0.882, AUC=0.938\\
+RF & Classification & FPCA & Acc=0.882, AUC=0.896 & Acc=0.882, AUC=0.917\\
+SVM & Classification & Raw & Acc=0.882, AUC=0.903 & Acc=0.765, AUC=0.833\\
+Hierarchical & Clustering & FPCA & ARI=0.764, Sil=0.482 & ARI=0.764, Sil=0.517\\
+K-means & Clustering & FPCA & ARI=0.764, Sil=0.482 & ARI=0.764, Sil=0.517\\
+\bottomrule
+\end{tabular}
